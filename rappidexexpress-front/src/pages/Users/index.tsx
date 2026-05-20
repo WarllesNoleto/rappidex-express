@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { DeliveryContext } from "../../context/DeliveryContext";
@@ -19,25 +19,37 @@ import { Loader } from "../../components/Loader";
 import { User } from "../../shared/interfaces";
 
 export function Users(){
+    const USERS_PAGE_SIZE = 200
     const { token } = useContext(DeliveryContext)
     api.defaults.headers.Authorization = `Bearer ${token}`
 
     const navigate = useNavigate()
     const [type, setType] = useState('shopkeeper');
     const [loading, setLoading] = useState(true)
-    const [users, setUsers] = useState([])
+    const [users, setUsers] = useState<User[]>([])
 
-    async function getData(){
+    const getData = useCallback(async () => {
         try {
-            const usersResponse = await api.get(`/user?type=${type}`)
+            let page = 1
+            let allUsers: User[] = []
+            let hasMoreUsers = true
 
-            setUsers(usersResponse.data.data)
+            while (hasMoreUsers) {
+                const usersResponse = await api.get(`/user?type=${type}&page=${page}&itemsPerPage=${USERS_PAGE_SIZE}`)
+                const currentPageUsers: User[] = usersResponse.data.data ?? []
+
+                allUsers = [...allUsers, ...currentPageUsers]
+                hasMoreUsers = currentPageUsers.length === USERS_PAGE_SIZE
+                page += 1
+            }
+
+            setUsers(allUsers)
             setLoading(false)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (error: any) {
-            alert(error.response.data.message)
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Erro ao carregar usuários.'
+            alert(message)
         }
-    }
+    }, [type])
 
     function handleMotoboys(){
         setLoading(true)
@@ -53,11 +65,9 @@ export function Users(){
         navigate(`/novo-usuario/${user}`)
     }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         getData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [type])
+    }, [getData])
 
     return (
         <Container>
