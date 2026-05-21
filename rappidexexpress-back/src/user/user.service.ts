@@ -353,10 +353,11 @@ export class UserService {
     };
 
     if (requester.type === UserType.MOTOBOY) {
-      where = { id: requester.id };
+      where = { id: requester.id, isActive: true };
     } else {
       where = {
         type: UserType.MOTOBOY,
+        isActive: true,
       };
     }
 
