@@ -71,10 +71,10 @@ export function Reports() {
             param = `${param}&establishmentId=${selectedEstablishment}`
         }
         if(createdIn){
-            param = `${param}&createdIn=${createdIn}T00:00:00.000Z`
+            param = `${param}&createdIn=${createdIn}T00:00:00.000`
         }
         if(createdUntil){
-            param = `${param}&createdUntil=${createdUntil}T23:59:59.000Z`
+            param = `${param}&createdUntil=${createdUntil}T23:59:59.999`
         }
 
         try {
@@ -117,10 +117,10 @@ export function Reports() {
             param = `${param}&establishmentId=${selectedEstablishment}`
         }
         if(createdIn){
-            param = `${param}&createdIn=${createdIn}T00:00:00.000Z`
+            param = `${param}&createdIn=${createdIn}T00:00:00.000`
         }
         if(createdUntil){
-            param = `${param}&createdUntil=${createdUntil}T23:59:59.000Z`
+            param = `${param}&createdUntil=${createdUntil}T23:59:59.999`
         }
 
         try {
