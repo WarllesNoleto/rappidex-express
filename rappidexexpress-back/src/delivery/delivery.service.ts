@@ -884,9 +884,21 @@ export class DeliveryService implements OnModuleInit {
       deliveryData.establishmentId
     ) {
       establishment = await this.findOneUserById(deliveryData.establishmentId);
+
+      if (
+        establishment.type !== UserType.SHOPKEEPER &&
+        establishment.type !== UserType.SHOPKEEPERADMIN
+      ) {
+        throw new BadRequestException('Estabelecimento informado é inválido.');
+      }
+
       this.ensureCityAccess(userFinded, establishment.cityId);
     } else {
       establishment = userFinded;
+    }
+
+    if (!establishment.isActive) {
+      throw new BadRequestException('Estabelecimento informado está inativo.');
     }
 
     if (
@@ -896,6 +908,15 @@ export class DeliveryService implements OnModuleInit {
       deliveryData.motoboyId
     ) {
       motoboy = await this.findOneUserById(deliveryData.motoboyId);
+
+      if (motoboy.type !== UserType.MOTOBOY) {
+        throw new BadRequestException('Motoboy informado é inválido.');
+      }
+
+      if (!motoboy.isActive) {
+        throw new BadRequestException('Motoboy informado está inativo.');
+      }
+
       this.ensureCityAccess(userFinded, motoboy.cityId);
       deliveryStatus = StatusDelivery.ONCOURSE;
       onCoursedAt = addHours(new Date(), -3);
