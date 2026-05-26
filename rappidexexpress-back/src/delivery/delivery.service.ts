@@ -914,17 +914,8 @@ export class DeliveryService implements OnModuleInit {
               );
       } catch (error: any) {
         this.logger.error(
-          `Claim atômico concluído para delivery ${deliveryFinded.id}, mas falhou sincronização iFood no fluxo PENDENTE -> ACAMINHO. Iniciando rollback condicional para PENDENTE.`,
+          `Claim atômico concluído para delivery ${deliveryFinded.id}, mas falhou sincronização iFood no fluxo PENDENTE -> ACAMINHO. Mantendo atribuição local e registrando para retentativa. status=${error?.response?.status || error?.status || 'N/A'} message=${error?.response?.data?.message || error?.message || error}`,
           error?.stack || error,
-        );
-
-        await this.rollbackPendingClaimAfterIfoodSyncFailure(
-          deliveryFinded.id,
-          motoboyFinded.id,
-        );
-
-        throw new InternalServerErrorException(
-          'Não foi possível sincronizar com o iFood. Tente aceitar novamente.',
         );
       }
 
@@ -968,8 +959,14 @@ export class DeliveryService implements OnModuleInit {
             updatedAt: addHours(new Date(), -3),
           }),
         );
-      } catch (error) {
-        return error;
+      } catch (error: any) {
+        this.logger.error(
+          `Falha ao salvar entrega ${deliveryFinded.id} no updateDelivery. status=${error?.response?.status || error?.status || 'N/A'} message=${error?.response?.data?.message || error?.message || error}`,
+          error?.stack || error,
+        );
+        throw new InternalServerErrorException(
+          'Não foi possível atualizar o pedido. Tente novamente.',
+        );
       }
 
       if (shouldSyncInBackground) {
