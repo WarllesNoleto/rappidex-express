@@ -362,6 +362,10 @@ export class DeliveryService implements OnModuleInit {
           previousDelivery?.establishment?.usesExternalIfoodPdv,
         );
 
+        this.logger.log(
+          `Confirmação de código iFood recebida. DeliveryId: ${previousDelivery.id}. OrderId: ${orderId}. MerchantId: ${merchantId || 'não informado'}. HasDeliveryDropCodeRequested: ${hasDeliveryDropCodeRequested}. StatusLocal: ${previousDelivery.status}.`,
+        );
+
         if (!hasDeliveryDropCodeRequested) {
           const ifoodConclusionStatus = await this.getIfoodConclusionStatus(
             orderId,
@@ -375,8 +379,8 @@ export class DeliveryService implements OnModuleInit {
             return {};
           }
 
-          throw new BadRequestException(
-            'O pedido ainda não está elegível para validação do código no iFood (DELIVERY_DROP_CODE_REQUESTED).',
+          this.logger.warn(
+            `DELIVERY_DROP_CODE_REQUESTED não encontrado localmente; tentando validar código diretamente no iFood. DeliveryId: ${previousDelivery.id}. OrderId: ${orderId}. MerchantId: ${merchantId || 'não informado'}.`,
           );
         }
 
@@ -387,7 +391,7 @@ export class DeliveryService implements OnModuleInit {
         }
 
         this.logger.log(
-          `verifyDeliveryCode enviado para iFood. OrderId: ${orderId}. MerchantId: ${merchantId}.`,
+          `verifyDeliveryCode enviado para iFood. DeliveryId: ${previousDelivery.id}. OrderId: ${orderId}. MerchantId: ${merchantId || 'não informado'}.`,
         );
 
         let verifyResult: any;
@@ -397,7 +401,13 @@ export class DeliveryService implements OnModuleInit {
             deliveryData.deliveryCode,
             merchantId,
           );
+          this.logger.log(
+            `Código de entrega validado no iFood com sucesso. DeliveryId: ${previousDelivery.id}. OrderId: ${orderId}. MerchantId: ${merchantId || 'não informado'}. Resultado: ${JSON.stringify(verifyResult || {})}`,
+          );
         } catch (error: any) {
+          this.logger.error(
+            `Erro retornado pelo iFood ao validar código. DeliveryId: ${previousDelivery.id}. OrderId: ${orderId}. MerchantId: ${merchantId || 'não informado'}. status=${error?.response?.status || error?.status || 'N/A'} message=${error?.response?.data?.message || error?.message || error}`,
+          );
           const usesExternalIfoodPdv = Boolean(
             previousDelivery?.establishment?.usesExternalIfoodPdv,
           );
