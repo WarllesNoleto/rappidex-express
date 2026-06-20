@@ -40,7 +40,11 @@ export class IfoodWebhookService {
   }
 
   private async processIncomingEvents(events: any[]) {
-    const normalizedEvents = events.filter((event) => Boolean(event?.id));
+    const normalizedEvents = events.filter(
+      (event) =>
+        Boolean(event?.id) &&
+        (this.ifoodEventService.isEventRecentEnough?.(event) ?? true),
+    );
 
     if (normalizedEvents.length === 0) {
       return;
@@ -70,9 +74,7 @@ export class IfoodWebhookService {
     }
 
     const cancellationEvents = freshEvents.filter(
-      (event) =>
-        event?.code === 'CAN' ||
-        event?.fullCode === 'CANCELLED',
+      (event) => event?.code === 'CAN' || event?.fullCode === 'CANCELLED',
     );
     const cancellationRequestFailedEvents = freshEvents.filter(
       (event) =>
@@ -95,7 +97,10 @@ export class IfoodWebhookService {
     }
 
     for (const event of freshEvents) {
-      await this.deliveryService.updateExternalIfoodStatus(event.orderId, event);
+      await this.deliveryService.updateExternalIfoodStatus(
+        event.orderId,
+        event,
+      );
     }
 
     for (const event of cancellationEvents) {

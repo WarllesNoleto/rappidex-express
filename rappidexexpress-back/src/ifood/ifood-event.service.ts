@@ -5,6 +5,7 @@ import { IfoodEventEntity } from '../database/entities';
 
 @Injectable()
 export class IfoodEventService {
+  private static readonly MIN_EVENT_DATE = new Date('2026-06-01T00:00:00.000Z');
   constructor(
     @InjectRepository(IfoodEventEntity)
     private readonly ifoodEventRepository: MongoRepository<IfoodEventEntity>,
@@ -50,6 +51,19 @@ export class IfoodEventService {
     return Array.isArray(events) ? events : [];
   }
 
+  isEventRecentEnough(event: { createdAt?: string }) {
+    if (!event?.createdAt) {
+      return true;
+    }
+
+    const eventDate = new Date(event.createdAt);
+    if (Number.isNaN(eventDate.getTime())) {
+      return true;
+    }
+
+    return eventDate >= IfoodEventService.MIN_EVENT_DATE;
+  }
+
   async markAsProcessed(
     event: {
       id: string;
@@ -62,17 +76,29 @@ export class IfoodEventService {
     },
     acknowledged = false,
   ) {
-    return this.ifoodEventRepository.save({
-      eventId: event.id,
-      orderId: event.orderId ?? '',
-      merchantId: event.merchantId ?? '',
-      code: event.code ?? '',
-      fullCode: event.fullCode ?? '',
-      salesChannel: event.salesChannel ?? '',
-      createdAt: event.createdAt ?? '',
-      processedAt: new Date(),
-      acknowledged,
-    });
+    if (!this.isEventRecentEnough(event)) {
+      return null;
+    }
+
+    await this.ifoodEventRepository.updateOne(
+      { eventId: event.id },
+      {
+        $setOnInsert: {
+          eventId: event.id,
+          orderId: event.orderId ?? '',
+          merchantId: event.merchantId ?? '',
+          code: event.code ?? '',
+          fullCode: event.fullCode ?? '',
+          salesChannel: event.salesChannel ?? '',
+          createdAt: event.createdAt ?? '',
+          processedAt: new Date(),
+        },
+        $set: { acknowledged },
+      } as any,
+      { upsert: true } as any,
+    );
+
+    return this.findByEventId(event.id);
   }
 
   async markAsAcknowledged(eventId: string) {
