@@ -127,7 +127,10 @@ export class IfoodAutoPollingService implements OnModuleInit, OnModuleDestroy {
       const pendingAckEvents: any[] = [];
 
       for (const event of allEvents) {
-        if (!event?.id) {
+        if (
+          !event?.id ||
+          !(this.ifoodEventService.isEventRecentEnough?.(event) ?? true)
+        ) {
           continue;
         }
 
