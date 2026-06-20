@@ -8,7 +8,6 @@ import { AuthenticatorModule } from './authenticator/authenticator.module';
 import { DeliveryModule } from './delivery/delivery.module';
 import { CityModule } from './city/city.module';
 import { IfoodModule } from './ifood/ifood.module';
-import { MaintenanceModule } from './maintenance/maintenance.module';
 
 @Module({
   imports: [
@@ -21,7 +20,6 @@ import { MaintenanceModule } from './maintenance/maintenance.module';
     DeliveryModule,
     CityModule,
     IfoodModule,
-    MaintenanceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

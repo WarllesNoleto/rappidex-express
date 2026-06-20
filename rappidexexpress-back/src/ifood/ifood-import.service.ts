@@ -34,10 +34,8 @@ export class IfoodImportService {
       return;
     }
 
-    const eligibleEvents = events.filter(
-      (event) =>
-        this.isEligibleImportEvent(event) &&
-        (this.ifoodEventService.isEventRecentEnough?.(event) ?? true),
+    const eligibleEvents = events.filter((event) =>
+      this.isEligibleImportEvent(event),
     );
 
     if (eligibleEvents.length === 0) {
@@ -250,9 +248,6 @@ export class IfoodImportService {
   }
 
   isEligibleImportEvent(event: any) {
-    if (!(this.ifoodEventService.isEventRecentEnough?.(event) ?? true)) {
-      return false;
-    }
     const code = String(event?.code || '').toUpperCase();
     const fullCode = String(event?.fullCode || '').toUpperCase();
     return (

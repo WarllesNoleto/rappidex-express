@@ -9,7 +9,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { utilities as nestWinstonUtilities, WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 import { AppModule } from './app.module';
-import { MongoDbQuotaExceptionFilter } from './maintenance/mongodb-quota-exception.filter';
 
 async function bootstrap() {
   const options = createNestOptions();
@@ -20,7 +19,10 @@ async function bootstrap() {
 
   app.enableCors({
     origin: (origin, callback) => {
-      const localOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173'];
+      const localOrigins = [
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
+      ];
 
       const envOrigins = (process.env.FRONTEND_URLS || '')
         .split(',')
@@ -47,7 +49,6 @@ async function bootstrap() {
     credentials: true,
   });
 
-  app.useGlobalFilters(new MongoDbQuotaExceptionFilter());
   setupGlobalPipes(app);
   setupSwaggerModule(app, configService);
 
