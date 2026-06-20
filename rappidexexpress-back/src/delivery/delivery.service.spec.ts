@@ -288,24 +288,28 @@ describe('DeliveryService', () => {
     );
   });
 
-  it('deve rejeitar finalização quando não houver evento DELIVERY_DROP_CODE_REQUESTED', async () => {
+  it('deve tentar validar código diretamente no iFood quando não houver evento DELIVERY_DROP_CODE_REQUESTED local', async () => {
     ifoodOrderLinkService.findByDeliveryId.mockResolvedValue({
       ifoodOrderId: 'ifood-4',
       merchantId: 'merchant-4',
     });
     ifoodEventService.hasDeliveryDropCodeRequested.mockResolvedValue(false);
 
-    await expect(
-      (service as any).syncIfoodIfNeeded(
-        {
-          id: 'delivery-4',
-          status: StatusDelivery.AWAITING_CODE,
-          ifoodArrivedAtDestinationSynced: true,
-        },
-        {},
-        { status: StatusDelivery.FINISHED, deliveryCode: '9999' },
-      ),
-    ).rejects.toThrow('DELIVERY_DROP_CODE_REQUESTED');
+    await (service as any).syncIfoodIfNeeded(
+      {
+        id: 'delivery-4',
+        status: StatusDelivery.AWAITING_CODE,
+        ifoodArrivedAtDestinationSynced: true,
+      },
+      {},
+      { status: StatusDelivery.FINISHED, deliveryCode: '9999' },
+    );
+
+    expect(ifoodOrdersService.verifyDeliveryCode).toHaveBeenCalledWith(
+      'ifood-4',
+      '9999',
+      'merchant-4',
+    );
   });
 
   it('deve finalizar localmente quando iFood já estiver concluído', async () => {
